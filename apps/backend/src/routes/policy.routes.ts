@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { getCurrentPolicySnapshot } from '@/services/platformPolicy.service.js';
+import { getCurrentSafetyPolicySnapshot } from '@/services/contentSafetyPolicy.service.js';
 
 const router = Router();
 
@@ -45,6 +46,18 @@ const router = Router();
 router.get('/current', (_req: Request, res: Response): void => {
   const snapshot = getCurrentPolicySnapshot();
   // 1-hour public cache — short enough to pick up same-day changes
+  res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+  res.json(snapshot);
+});
+
+/**
+ * GET /api/v1/policy/safety
+ *
+ * Versioned content-safety taxonomy shared by UI, API validators, and
+ * moderator tools. Historical decisions keep the stamped policy_version.
+ */
+router.get('/safety', (_req: Request, res: Response): void => {
+  const snapshot = getCurrentSafetyPolicySnapshot();
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
   res.json(snapshot);
 });

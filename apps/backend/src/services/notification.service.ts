@@ -26,6 +26,9 @@ export type NotificationType =
   | 'review_requested'
   | 'review_submitted'
   | 'host_response'
+  | 'host_response_moderated'
+  | 'review_moderation_update'
+  | 'review_appeal_update'
   | 'dispute_initiated'
   | 'new_property'
   | 'system_alert'
@@ -75,6 +78,9 @@ const EMAIL_TEMPLATES: Partial<Record<NotificationType, string>> = {
   review_requested: 'Review Requested',
   review_submitted: 'New Review Submitted',
   host_response: 'Host Responded to Your Review',
+  host_response_moderated: 'Host Response Moderation Update',
+  review_moderation_update: 'Review Moderation Update',
+  review_appeal_update: 'Review Appeal Update',
   dispute_initiated: 'Dispute Initiated',
   new_property: 'New Listing from a Host You Follow',
   system_alert: 'System Alert',
@@ -94,6 +100,9 @@ const VALID_NOTIFICATION_TYPES: ReadonlyArray<NotificationType> = [
   'review_requested',
   'review_submitted',
   'host_response',
+  'host_response_moderated',
+  'review_moderation_update',
+  'review_appeal_update',
   'dispute_initiated',
   'new_property',
   'system_alert',

@@ -1,4 +1,5 @@
 import { syncAllBookings, syncAllProperties, reconcileAllPendingEscrows } from './sync.service.js';
+import { syncAllReviews } from './reviewSync.service.js';
 import { purgeExpired as purgeExpiredIdempotencyKeys } from './idempotency.service.js';
 import { BookingService } from './booking.service.js';
 
@@ -49,6 +50,15 @@ async function runSync(): Promise<void> {
     );
   } else {
     console.error(`[sync] Booking sync failed: ${bookingsResult.error}`);
+  }
+
+  const reviewsResult = await syncAllReviews();
+  if (reviewsResult.success) {
+    console.log(
+      `[sync] Reviews: ${reviewsResult.data?.synced} synced, ${reviewsResult.data?.failed} failed, ${reviewsResult.data?.queued} queued`,
+    );
+  } else {
+    console.error(`[sync] Review sync failed: ${reviewsResult.error}`);
   }
 }
 

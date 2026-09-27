@@ -8,10 +8,17 @@ interface HostResponseFormProps {
   reviewId: string;
   /** Called with the response text on successful submission */
   onSuccess?: (responseText: string) => void;
+  mode?: 'create' | 'edit';
+  initialValue?: string;
 }
 
-export default function HostResponseForm({ reviewId, onSuccess }: HostResponseFormProps) {
-  const [response, setResponse] = useState('');
+export default function HostResponseForm({
+  reviewId,
+  onSuccess,
+  mode = 'create',
+  initialValue = '',
+}: HostResponseFormProps) {
+  const [response, setResponse] = useState(initialValue);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +39,7 @@ export default function HostResponseForm({ reviewId, onSuccess }: HostResponseFo
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/api/v1/reviews/${reviewId}/response`, {
-        method: 'POST',
+        method: mode === 'edit' ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ response: trimmed }),
       });
@@ -44,7 +51,7 @@ export default function HostResponseForm({ reviewId, onSuccess }: HostResponseFo
 
       const saved = await res.json();
       onSuccess?.(saved.host_response ?? trimmed);
-      setResponse('');
+      if (mode === 'create') setResponse('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit response');
     } finally {
@@ -72,7 +79,13 @@ export default function HostResponseForm({ reviewId, onSuccess }: HostResponseFo
         disabled={submitting}
         className="text-sm bg-gray-800 dark:bg-gray-600 text-white px-4 py-1.5 rounded-lg hover:bg-gray-700 disabled:opacity-50 transition"
       >
-        {submitting ? 'Submitting...' : 'Post Response'}
+        {submitting
+          ? mode === 'edit'
+            ? 'Saving...'
+            : 'Submitting...'
+          : mode === 'edit'
+            ? 'Save edits'
+            : 'Post Response'}
       </button>
     </form>
   );

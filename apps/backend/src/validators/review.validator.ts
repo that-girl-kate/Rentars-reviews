@@ -1,4 +1,26 @@
 import { z } from 'zod';
+import {
+  getHostResponseReasonCodes,
+  getReviewReasonCodes,
+} from '../services/contentSafetyPolicy.service.js';
+
+const reviewReasonEnum = z.enum(
+  getReviewReasonCodes() as [string, ...string[]],
+  {
+    errorMap: () => ({
+      message: `reason must be one of: ${getReviewReasonCodes().join(', ')}`,
+    }),
+  },
+);
+
+const hostResponseReasonEnum = z.enum(
+  getHostResponseReasonCodes() as [string, ...string[]],
+  {
+    errorMap: () => ({
+      message: `policyCode must be one of: ${getHostResponseReasonCodes().join(', ')}`,
+    }),
+  },
+);
 
 export const createReviewSchema = z.object({
   bookingId: z
@@ -17,8 +39,42 @@ export const createReviewSchema = z.object({
 });
 
 export const flagReviewSchema = z.object({
+  reason: reviewReasonEnum,
+});
+
+export const hostResponseSchema = z.object({
+  response: z
+    .string({ required_error: 'response is required' })
+    .trim()
+    .min(1, 'Response cannot be blank')
+    .max(1000, 'Response must be at most 1000 characters'),
+});
+
+export const appealSchema = z.object({
   reason: z
     .string({ required_error: 'reason is required' })
     .trim()
-    .min(1, 'Flag reason cannot be blank'),
+    .min(1, 'Appeal reason cannot be blank')
+    .max(2000),
+});
+
+export const resolveAppealSchema = z.object({
+  approve: z.boolean({ required_error: 'approve is required' }),
+  note: z.string().trim().max(2000).optional(),
+});
+
+export const hideReviewSchema = z.object({
+  policyCode: reviewReasonEnum,
+  reason: z.string().trim().max(2000).optional(),
+});
+
+export const moderateHostResponseSchema = z.object({
+  action: z.enum(['hide', 'remove', 'restore']),
+  policyCode: hostResponseReasonEnum,
+  note: z.string().trim().max(2000).optional(),
+});
+
+export const linkChainSchema = z.object({
+  onChainId: z.number({ required_error: 'onChainId is required' }).int().positive(),
+  txHash: z.string().trim().min(1).optional(),
 });

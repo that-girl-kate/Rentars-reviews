@@ -62,3 +62,6 @@
 \i migrations/00056_update_booking_atomic_v2_terms.sql
 \i migrations/00057_add_admin_roles.sql
 \i migrations/00058_add_deleted_user_status.sql
+\i migrations/00061_enhance_reports_and_moderation.sql
+\i migrations/00065_review_moderation_appeals_sync.sql
+\i migrations/00066_safety_taxonomy_and_chain_unique.sql

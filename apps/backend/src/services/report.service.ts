@@ -5,20 +5,22 @@
 import { supabase } from '../config/supabase.js';
 import { createNotification, shouldSendInApp } from './notification.service.js';
 import type { ServiceResponse } from './index.js';
+import {
+  SAFETY_REASON_CODES,
+  CURRENT_SAFETY_POLICY_VERSION,
+  isValidSafetyReason,
+  mapLegacyReportReason,
+  type SafetyReasonCode,
+} from './contentSafetyPolicy.service.js';
 
 export type ReportTargetType = 'property' | 'review';
 export type ReportStatus = 'pending' | 'resolved' | 'dismissed' | 'escalated';
 export type ReportSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type AppealStatus = 'none' | 'pending' | 'approved' | 'denied';
-export const REPORT_REASONS = [
-  'spam',
-  'fraud',
-  'inappropriate',
-  'misleading',
-  'harassment',
-  'other',
-] as const;
-export type ReportReason = (typeof REPORT_REASONS)[number];
+
+/** Aligned with versioned safety taxonomy (#638). Legacy 6 codes remain valid. */
+export const REPORT_REASONS = SAFETY_REASON_CODES;
+export type ReportReason = SafetyReasonCode;
 
 export interface Report {
   id: string;
@@ -59,7 +61,10 @@ export async function submitReport(
   if (!['property', 'review'].includes(targetType)) {
     return { success: false, error: 'target_type must be "property" or "review"' };
   }
-  if (!REPORT_REASONS.includes(reason)) {
+  const normalizedReason = isValidSafetyReason(reason)
+    ? reason
+    : mapLegacyReportReason(reason);
+  if (!REPORT_REASONS.includes(normalizedReason)) {
     return { success: false, error: `reason must be one of: ${REPORT_REASONS.join(', ')}` };
   }
 
@@ -69,8 +74,10 @@ export async function submitReport(
       target_type: targetType,
       target_id: targetId,
       reporter_id: reporterId,
-      reason,
+      reason: normalizedReason,
       details: details || null,
+      policy_code: normalizedReason,
+      policy_version: CURRENT_SAFETY_POLICY_VERSION,
     })
     .select()
     .single();
